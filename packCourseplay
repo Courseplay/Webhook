@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+logger "Webhook from GitHub, packing branch $1"
+cd /tmp
+rm -rf courseplay*
+git clone --single-branch --depth 3 --branch $1 https://github.com/Courseplay/courseplay
+cd courseplay 
+git checkout $1
+# extract version from modDesc.xml
+grep '<version>' modDesc.xml | sed -e 's/<\/*version>//g' -e 's/^[ \t]*//'> /tmp/courseplay_version
+
+prefix=FS19_Courseplay
+#filename=$prefix`cat /tmp/courseplay_version | sed -e 's/\./_/g'`.zip 
+# Don't add version to ZIP file name
+filename=${prefix}.zip
+
+echo $filename > /tmp/courseplay_filename
+rm -rf /tmp/${prefix}*
+zip -r /tmp/$filename * -x *.git*
