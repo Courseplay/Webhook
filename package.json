@@ -1,0 +1,9 @@
+{
+  "name": "courseplay-webhook",
+  "description": "Webhook to create a Courseplay release on push to master",
+  "version": "0.1.0",
+  "dependencies": {
+    "octokit": "latest"
+  },
+  "devDependencies": {}
+}
