@@ -10,10 +10,10 @@ const owner = 'Courseplay';
 const repo = 'courseplay';
 
 
-const Octokit = require('@octokit/rest');
+const Octokit = require('@octokit/core').Octokit;
 const octokit = new Octokit({auth: 'token ' + token});
 
-const WebhooksApi = require('@octokit/webhooks')
+const WebhooksApi = require('@octokit/webhooks').Webhooks;
 const webhooks = new WebhooksApi({secret: secret })
 
 const http = require('http');
