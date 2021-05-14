@@ -11,36 +11,27 @@ const repo = 'courseplay';
 
 
 const Octokit = require('@octokit/rest');
-const octokit = new Octokit({ auth: 'token ' + token});
+const octokit = new Octokit({auth: 'token ' + token});
 
 const WebhooksApi = require('@octokit/webhooks')
-const webhooks = new WebhooksApi({ secret: secret })
+const webhooks = new WebhooksApi({secret: secret })
 
 const http = require('http');
-const crypto = require('crypto');
 const execSync = require('child_process').execSync;
 
 const fs = require('fs')
 
-
-async function checkRelease() {
-	const result = await octokit.repos.getLatestRelease({owner : owner, repo : repo});
-	console.log(result);
-
-}
-
-
 async function createRelease(tag, name, description, sha, filename) {
-	result = await octokit.repos.createRelease({
-		owner : owner, 
-		repo : repo, 
-		tag_name : tag, 
-	//	draft : true,
-		prerelease : false,
-		name : name,
-		body : description,
-		target_commitish : sha});
-
+	let result = await octokit.repos.createRelease({
+		owner: owner,
+		repo: repo,
+		tag_name: tag,
+		//	draft : true,
+		prerelease: false,
+		name: name,
+		body: description,
+		target_commitish: sha
+	});
 
 	const stats = fs.statSync('/tmp/' + filename);
 
@@ -57,17 +48,19 @@ async function createRelease(tag, name, description, sha, filename) {
 	console.log(result)
 }
 
-webhooks.on('push', ({id, name, payload}) => {
+webhooks.on('push', ({name, payload}) => {
     console.log(name, payload);
 
-    if (payload.ref != 'refs/heads/master') {
+    let branch = payload.ref.replace('refs/heads/', '')
+
+    if (branch !== 'master') {
     	console.log('Not creating release from ' + payload.ref);
-	return;
+		return;
     }
 
     console.log('Push event for ' + payload.ref);
 
-    execSync('/home/peter/courseplay_webhook/packCourseplay ' + payload.head_commit.id);
+    execSync(__dirname + '/packCourseplay ' + branch + ' ' + __dirname + '/exclude.lst');
 
     fs.readFile('/tmp/courseplay_version', (err, data) => { 
 	if (err) throw err;

@@ -3,6 +3,8 @@
   "description": "Webhook to create a Courseplay release on push to master",
   "version": "0.1.0",
   "dependencies": {
+    "@octokit/rest": "^18.5.3",
+    "@octokit/webhooks": "^9.6.0",
     "octokit": "latest"
   },
   "devDependencies": {}

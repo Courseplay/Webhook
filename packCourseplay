@@ -1,19 +1,26 @@
 #!/bin/bash
 #
-logger "Webhook from GitHub, packing branch $1"
+# Create a Courseplay installable zip package from the branch passed in.
+# <exclude file> is a file with patterns to exclude from the zip (see 'man zip')
+#
+# Usage:
+#   packCourseplay <branch> <exclude file>
+#
+branch=$1
+exclude_file=$2
+
+logger "Webhook from GitHub, packing branch $branch"
 cd /tmp
 rm -rf courseplay*
-git clone --single-branch --depth 3 --branch $1 https://github.com/Courseplay/courseplay
+git clone --single-branch --depth 3 --branch "$branch" https://github.com/Courseplay/courseplay
 cd courseplay 
-git checkout $1
+git checkout "$branch"
+
 # extract version from modDesc.xml
 grep '<version>' modDesc.xml | sed -e 's/<\/*version>//g' -e 's/^[ \t]*//'> /tmp/courseplay_version
 
-prefix=FS19_Courseplay
-#filename=$prefix`cat /tmp/courseplay_version | sed -e 's/\./_/g'`.zip 
-# Don't add version to ZIP file name
-filename=${prefix}.zip
+filename=FS19_Courseplay.zip
 
 echo $filename > /tmp/courseplay_filename
-rm -rf /tmp/${prefix}*
-zip -r /tmp/$filename * -x *.git*
+rm -rf /tmp/${filename}
+zip -r /tmp/$filename * --exclude @"$exclude_file"
