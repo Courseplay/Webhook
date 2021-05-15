@@ -4,27 +4,19 @@
 // upload it to GitHub as a release.
 //
 const secret = process.env.SECRET
-const token = process.env.TOKEN
+const privateKey = process.env.PRIVATE_KEY
 
-const owner = 'Courseplay';
-const repo = 'courseplay';
-
-
-const Octokit = require('@octokit/core').Octokit;
-const octokit = new Octokit({auth: 'token ' + token});
-
-const WebhooksApi = require('@octokit/webhooks').Webhooks;
-const webhooks = new WebhooksApi({secret: secret })
+const {App} =  require('@octokit/app')
+const {createNodeMiddleware} =  require('@octokit/webhooks')
+const app = new App({appId: "115455", privateKey: privateKey, webhooks: {secret}})
 
 const http = require('http');
 const execSync = require('child_process').execSync;
 
 const fs = require('fs')
 
-async function createRelease(tag, name, description, sha, filename) {
-	let result = await octokit.repos.createRelease({
-		owner: owner,
-		repo: repo,
+async function createRelease(octokit, tag, name, description, sha, filename) {
+	let result = await octokit.request('POST /repos/Courseplay/courseplay/releases', {
 		tag_name: tag,
 		//	draft : true,
 		prerelease: false,
@@ -48,17 +40,20 @@ async function createRelease(tag, name, description, sha, filename) {
 	console.log(result)
 }
 
-webhooks.on('push', ({name, payload}) => {
-    console.log(name, payload);
-
+app.webhooks.on('push', ({name, octokit, payload}) => {
     let branch = payload.ref.replace('refs/heads/', '')
 
-    if (branch !== 'master') {
-    	console.log('Not creating release from ' + payload.ref);
-		return;
-    }
-
     console.log('Push event for ' + payload.ref);
+
+    if (payload.repository.name !== 'courseplay') {
+    	console.log('Not creating release for ' + payload.repository.name + ', only for courseplay')
+		return
+	}
+
+    if (branch !== 'master') {
+    	console.log('Not creating release from ' + payload.ref + ', only from master')
+		return
+    }
 
     execSync(__dirname + '/packCourseplay ' + branch + ' ' + __dirname + '/exclude.lst');
 
@@ -67,16 +62,24 @@ webhooks.on('push', ({name, payload}) => {
 
 	const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
-	fs.readFile('/tmp/courseplay_filename', (err, data) => {
-		if (err) throw err;
+		fs.readFile('/tmp/courseplay_filename', (err, data) => {
+			if (err) throw err;
 
-		const courseplayFilename = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
+			const courseplayFilename = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
-		console.log('Creating release ' + courseplayVersion); 
-		createRelease(courseplayVersion, 'Courseplay for FS19 v' + courseplayVersion, payload.head_commit.message, payload.head_commit.id, courseplayFilename);
+			console.log('Creating release ' + courseplayVersion);
+			createRelease(octokit, courseplayVersion, 'Courseplay for FS19 v' + courseplayVersion,
+				payload.head_commit.message, payload.head_commit.id, courseplayFilename)
+				.then(() => {
+					console.log('Release created')
+				})
+				.catch(e => {
+					// most likely the release already exists, this was just a subsequent push to master
+					console.log('Release not created, error: ' + e);
+				});
+		})
 	})
-    })   
 })
 
-http.createServer(webhooks.middleware).listen(8080);
+http.createServer(createNodeMiddleware(app.webhooks)).listen(8080);
 
