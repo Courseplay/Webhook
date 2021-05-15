@@ -1,4 +1,5 @@
-.*
+*.git*
+*.editorconfig
 *README*
 *LICENSE*
 test

@@ -12,7 +12,7 @@ Files matching the patterns in `exclude.lst` will not be included in
 the zip.
 
 Once the zip file is created, the app attempts to create a release 
-on GitLab with the version number found in `modDesc.xml`. This will 
+on GitHub with the version number found in `modDesc.xml`. This will 
 succeed only if no such release exist yet, so only the first push
 with a different version will result in a new release. 
 
@@ -30,11 +30,20 @@ Change to the installation directory and install the dependencies with
 ## Running the App
 
 The App uses a Webhook secret and a private key for authentication with
-GitLab. You can enter/generate these at https://github.com/organizations/Courseplay/settings/apps/courseplay-release-creator.
+GitHub. You can enter/generate these at https://github.com/organizations/Courseplay/settings/apps/courseplay-release-creator.
 
 Make sure the environment you run the App has the `SECRET` and `PRIVATE_KEY` 
 variables set, the App uses these to get the Webhook secret and the 
-private key.
+private key. You can do this for instance in `.bashrc`:
+```bash
+export SECRET='your secret'
+export PRIVATE_KEY='-----BEGIN RSA PRIVATE KEY-----
+...
+your private key here, on multiple lines
+...
+-----END RSA PRIVATE KEY-----'
+```
+Make sure you use single quotes around the private key to preserve the line breaks.
 
 Now you can start the App with
 ```bash
