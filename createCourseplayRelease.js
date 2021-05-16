@@ -26,7 +26,7 @@ async function createRelease(octokit, tag, name, description, sha, filename) {
 	let result = await octokit.request('POST /repos/Courseplay/courseplay/releases', {
 		tag_name: tag,
 		//	draft : true,
-		prerelease: true,
+		prerelease: false,
 		name: name,
 		body: description,
 		target_commitish: sha
