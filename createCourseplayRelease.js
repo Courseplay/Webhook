@@ -33,13 +33,14 @@ async function createRelease(octokit, tag, name, description, sha, filename) {
 	});
 
 	const stats = fs.statSync('/tmp/' + filename);
+	const zipFile = fs.readFileSync('/tmp/' + filename)
 
  	result = await octokit.request('POST ' + result.data.upload_url, {
 		headers: {
 			'content-length' : stats.size,
 			'content-type' : 'application/zip'
 		},
-		file: fs.readFileSync('/tmp/' + filename),
+		data: zipFile,
 		name: filename
 		})
 	
