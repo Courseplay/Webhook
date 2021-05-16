@@ -4,7 +4,16 @@
 // upload it to GitHub as a release.
 //
 const secret = process.env.SECRET
-const privateKey = process.env.PRIVATE_KEY
+let privateKey = process.env.PRIVATE_KEY
+
+const fs = require('fs')
+
+try {
+	privateKey = fs.readFileSync('courseplay-release-creator-private-key.pem')
+	console.log('Read private key from file.')
+} catch (e) {
+	console.log('No private key file could be read')
+}
 
 const {App} =  require('@octokit/app')
 const {createNodeMiddleware} =  require('@octokit/webhooks')
@@ -13,13 +22,11 @@ const app = new App({appId: "115455", privateKey: privateKey, webhooks: {secret}
 const http = require('http');
 const execSync = require('child_process').execSync;
 
-const fs = require('fs')
-
 async function createRelease(octokit, tag, name, description, sha, filename) {
 	let result = await octokit.request('POST /repos/Courseplay/courseplay/releases', {
 		tag_name: tag,
 		//	draft : true,
-		prerelease: false,
+		prerelease: true,
 		name: name,
 		body: description,
 		target_commitish: sha
@@ -27,8 +34,7 @@ async function createRelease(octokit, tag, name, description, sha, filename) {
 
 	const stats = fs.statSync('/tmp/' + filename);
 
- 	result = await octokit.repos.uploadReleaseAsset({
-		url : result.data.upload_url,
+ 	result = await octokit.request('POST ' + result.data.upload_url, {
 		headers: {
 			'content-length' : stats.size,
 			'content-type' : 'application/zip'
@@ -40,7 +46,7 @@ async function createRelease(octokit, tag, name, description, sha, filename) {
 	console.log(result)
 }
 
-app.webhooks.on('push', ({name, octokit, payload}) => {
+app.webhooks.on('push', ({octokit, payload}) => {
     let branch = payload.ref.replace('refs/heads/', '')
 
     console.log('Push event for ' + payload.ref);
@@ -58,9 +64,9 @@ app.webhooks.on('push', ({name, octokit, payload}) => {
     execSync(__dirname + '/packCourseplay ' + branch + ' ' + __dirname + '/exclude.lst');
 
     fs.readFile('/tmp/courseplay_version', (err, data) => { 
-	if (err) throw err;
+		if (err) throw err;
 
-	const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
+		const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
 		fs.readFile('/tmp/courseplay_filename', (err, data) => {
 			if (err) throw err;
