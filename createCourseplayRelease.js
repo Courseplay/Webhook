@@ -57,8 +57,8 @@ app.webhooks.on('push', ({octokit, payload}) => {
 		return
 	}
 
-    if (branch !== 'master') {
-    	console.log('Not creating release from ' + payload.ref + ', only from master')
+    if (branch !== 'master' && branch !== 'ModHubFS19') {
+    	console.log('Not creating release from ' + payload.ref + ', only from master and ModHubFS19.')
 		return
     }
 
