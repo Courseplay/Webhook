@@ -78,7 +78,7 @@ app.webhooks.on('push', ({octokit, payload}) => {
 
 		console.log('Creating release ' + courseplayVersion);
 		createRelease(octokit, courseplayVersion, releasePrefix + courseplayVersion,
-			payload.head_commit.message, payload.head_commit.id, zipFileName, payload.repository.releases_url)
+			payload.head_commit.message, payload.head_commit.id, payload.repository.releases_url, zipFileName)
 			.then(() => {
 				console.log('Release created')
 			})
