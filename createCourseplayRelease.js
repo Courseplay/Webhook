@@ -22,8 +22,8 @@ const app = new App({appId: "115455", privateKey: privateKey, webhooks: {secret}
 const http = require('http');
 const execSync = require('child_process').execSync;
 
-async function createRelease(octokit, tag, name, description, sha, releases_url, filename) {
-	let result = await octokit.request('POST ' + releases_url, {
+async function createRelease(octokit, tag, name, description, sha, repo, filename) {
+	let result = await octokit.request('POST /repos/Courseplay/' + repo + '/releases', {
 		tag_name: tag,
 		//	draft : true,
 		prerelease: false,
@@ -76,9 +76,9 @@ app.webhooks.on('push', ({octokit, payload}) => {
 
 		const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
-		console.log('Creating release ' + courseplayVersion + ' at ' + payload.repository.releases_url);
+		console.log('Creating release ' + courseplayVersion + ' at ' + payload.repository.name);
 		createRelease(octokit, courseplayVersion, releasePrefix + courseplayVersion,
-			payload.head_commit.message, payload.head_commit.id, payload.repository.releases_url, zipFileName)
+			payload.head_commit.message, payload.head_commit.id, payload.repository.name, zipFileName)
 			.then(() => {
 				console.log('Release created')
 			})
