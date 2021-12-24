@@ -22,8 +22,8 @@ const app = new App({appId: "115455", privateKey: privateKey, webhooks: {secret}
 const http = require('http');
 const execSync = require('child_process').execSync;
 
-async function createRelease(octokit, tag, name, description, sha, filename) {
-	let result = await octokit.request('POST /repos/Courseplay/courseplay/releases', {
+async function createRelease(octokit, tag, name, description, sha, releases_url, filename) {
+	let result = await octokit.request('POST ' + releases_url, {
 		tag_name: tag,
 		//	draft : true,
 		prerelease: false,
@@ -52,39 +52,40 @@ app.webhooks.on('push', ({octokit, payload}) => {
 
     console.log('Push event for ' + payload.ref);
 
-    if (payload.repository.name !== 'courseplay') {
-    	console.log('Not creating release for ' + payload.repository.name + ', only for courseplay')
+	let zipFileName, releasePrefix;
+	if (payload.repository.name === 'courseplay') {
+		zipFileName = FS19_Courseplay.zip
+		releasePrefix = 'Courseplay for FS19 v'
+	} else if (payload.repository.name === 'FS22_Courseplay') {
+		zipFileName = FS22_Courseplay.zip
+		releasePrefix = 'Courseplay for FS22 v'
+	} else {
+		console.log('Not creating release for ' + payload.repository.name)
 		return
 	}
 
-    if (branch !== 'master' && branch !== 'ModHubFS19') {
-    	console.log('Not creating release from ' + payload.ref + ', only from master and ModHubFS19.')
+    if (branch !== 'master' && branch !== 'main' && branch !== 'ModHubFS19') {
+    	console.log('Not creating release from ' + payload.ref + ', only from master, main and ModHubFS19.')
 		return
     }
 
-    execSync(__dirname + '/packCourseplay ' + branch + ' ' + __dirname + '/exclude.lst');
+    execSync(__dirname + '/packCourseplay ' + branch + ' ' + __dirname + '/exclude.lst ' + zipFileName + ' ' + payload.repository.name);
 
     fs.readFile('/tmp/courseplay_version', (err, data) => { 
 		if (err) throw err;
 
 		const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
-		fs.readFile('/tmp/courseplay_filename', (err, data) => {
-			if (err) throw err;
-
-			const courseplayFilename = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
-
-			console.log('Creating release ' + courseplayVersion);
-			createRelease(octokit, courseplayVersion, 'Courseplay for FS19 v' + courseplayVersion,
-				payload.head_commit.message, payload.head_commit.id, courseplayFilename)
-				.then(() => {
-					console.log('Release created')
-				})
-				.catch(e => {
-					// most likely the release already exists, this was just a subsequent push to master
-					console.log('Release not created, error: ' + e);
-				});
-		})
+		console.log('Creating release ' + courseplayVersion);
+		createRelease(octokit, courseplayVersion, releasePrefix + courseplayVersion,
+			payload.head_commit.message, payload.head_commit.id, zipFileName, payload.repository.releases_url)
+			.then(() => {
+				console.log('Release created')
+			})
+			.catch(e => {
+				// most likely the release already exists, this was just a subsequent push to master
+				console.log('Release not created, error: ' + e);
+			});
 	})
 })
 
