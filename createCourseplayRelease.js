@@ -76,7 +76,7 @@ app.webhooks.on('push', ({octokit, payload}) => {
 
 		const courseplayVersion = data.toString().replace(/^\s+|\s+$/g, ''); //remove newlines
 
-		console.log('Creating release ' + courseplayVersion);
+		console.log('Creating release ' + courseplayVersion + ' at ' + payload.repository.releases_url);
 		createRelease(octokit, courseplayVersion, releasePrefix + courseplayVersion,
 			payload.head_commit.message, payload.head_commit.id, payload.repository.releases_url, zipFileName)
 			.then(() => {
