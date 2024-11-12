@@ -59,6 +59,9 @@ app.webhooks.on('push', ({octokit, payload}) => {
 	} else if (payload.repository.name === 'Courseplay_FS22') {
 		zipFileName = 'FS22_Courseplay.zip'
 		releasePrefix = 'Courseplay for FS22 v'
+	} else if (payload.repository.name === 'Courseplay_FS25') {
+		zipFileName = 'FS25_Courseplay.zip'
+		releasePrefix = 'Courseplay for FS25 v'
 	} else {
 		console.log('Not creating release for ' + payload.repository.name)
 		return
