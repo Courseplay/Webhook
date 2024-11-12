@@ -5,8 +5,8 @@ events on the `courseplay` repository's `master` branch.
 
 If such an event is received, it starts the `packCourseplay` shell 
 script to clone the `master` branch and creates a zip file called 
-`FS19_Courseplay.zip` from the contents of the Courseplay source 
-directory.
+`FSxx_Courseplay.zip` from the contents of the Courseplay source 
+directory, where `xx` is the version (19, 22 or 25) based on the repository received in the event.
 
 Files matching the patterns in `exclude.lst` will not be included in
 the zip.
