@@ -1,3 +1,5 @@
+## Building release is now a Github action (https://github.com/Courseplay/Courseplay_FS25/blob/main/.github/workflows/build-release.yml), this webhook is now obsolete. 
+
 # Courseplay Release Creator
 
 This is the Courseplay Release Creator GitHub app. It listens for push
